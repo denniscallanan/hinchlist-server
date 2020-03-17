@@ -17,6 +17,11 @@ To run the server, run
 make run
 ```
 
+To test that the server is running and the API is setup, try hitting the healthcheck from your browser
+```
+GET localhost:5000/healthcheck
+```
+
 To develop locally first make sure all the tests are passing
 ```
 make test-local
