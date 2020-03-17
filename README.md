@@ -4,11 +4,26 @@ This repository contains the server-side API for the Life-Lists App.
 
 The server is written in Python and uses the Flask framework.
 
-This server communicates with a PostgresSQL database which is hosted on Heroku (as well as the server itself).
+This server communicates with a MySQL database which is hosted by Heroku (as well as the server itself).
 
 # Contributing
 
 Ensure you have Docker installed
+
+Ensure you have `mysql` installed. On mac run
+```
+brew install mysql
+```
+
+To use the production MYSQL database run
+```
+eval $(make mysql-env)
+```
+
+To use a local dev MySQL database then
+```
+export JAWSDB_URL=my-database-creds
+```
 
 Clone the repository
 

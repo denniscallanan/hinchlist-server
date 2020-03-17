@@ -1,10 +1,27 @@
 from flask import Flask
 from src.api.lifelists import LifeListClient
+from src.api.constants import Environment
 import os
+import MySQLdb
+from src.api.constants import EnvVars
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-life_list_client = LifeListClient()
+ENVIRONMENT = os.environ.get("ENV", "test")
+
+if ENVIRONMENT == Environment.PROD:
+    DATABASE_URL = os.environ[EnvVars.DATABASE_URL]
+    url = urlparse(DATABASE_URL)
+    db_conn = MySQLdb.connect(host=url.hostname, port=url.port, db=url.path[1:], passwd=url.password,
+                              user=url.username)
+else:
+    DATABASE_URL = os.environ[EnvVars.DATABASE_URL]
+    url = urlparse(DATABASE_URL)
+    db_conn = MySQLdb.connect(host=url.hostname, port=url.port, db=url.path[1:], passwd=url.password,
+                              user=url.username)
+
+life_list_client = LifeListClient(db_conn)
 
 
 @app.route('/')

@@ -18,17 +18,20 @@ class LifeList(DTO):
             "user_id": self.user_id
         }
 
+    @staticmethod
+    def from_tuple(tpl):
+        if not tpl:
+            return None
+        return LifeList(*tpl)
+
 
 class LifeListClient(BaseClient):
 
-    def __init__(self):
-        super(LifeListClient, self).__init__("", "")
+    def __init__(self, db_conn):
+        super(LifeListClient, self).__init__(db_conn=db_conn)
 
     def get_life_list(self, list_id):
-        mock_lists = [
-            LifeList("1", "Corona Prep List", "List preparing for coronavirus isolation", "1234"),
-            LifeList("2", "Bathroom Cleaning", "List getting all the spots when cleaning your bathroom", "1234"),
-            LifeList("3", "Workout list", "List of basic exercises for a home workout", "1234")
-        ]
-        life_list = next((x for x in mock_lists if x.list_id == list_id), None)
-        return self._prepare_response(life_list)
+        cur = self.db_conn.cursor()
+        cur.execute("SELECT * FROM lifelists WHERE id=%s", (list_id,))
+        res = cur.fetchone()
+        return self._prepare_response(LifeList.from_tuple(res))

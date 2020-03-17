@@ -1,10 +1,10 @@
 APP_NAME			= hinchlist
 IMAGE               = life-list-app
 TAG                 = latest
-DOCKER_REPOSITORY   = registry-app.eng.qops.net:5001/profserv/projects/$(IMAGE)
 
-PYTEST_OPTIONS  ?= --cov src.api --cov-report html --cov-report xml:./htmlcov/coverage.xml
+PYTEST_OPTIONS  ?= --cov src.api
 PORT            ?= 5000
+JAWSDB_URL      ?= unset
 
 clean:
 	docker rm -f $(DOCKER_REPOSITORY) || true
@@ -14,7 +14,7 @@ build:
 	docker build -t $(IMAGE) .
 
 run:
-	docker run -u :1000 -p $(PORT):5000 $(IMAGE)
+	docker run -e JAWSDB_URL=$(JAWSDB_URL) -u :1000 -p $(PORT):5000 $(IMAGE)
 
 run-local:
 	python3 run_server.py
@@ -37,3 +37,6 @@ publish:
 
 deploy:
 	heroku container:release web -a $(APP_NAME)
+
+mysql-env:
+	export $(shell heroku config -s -a hinchlist | grep JAWSDB_URL)
