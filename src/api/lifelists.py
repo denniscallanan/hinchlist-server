@@ -35,3 +35,20 @@ class LifeListClient(BaseClient):
         cur.execute("SELECT * FROM lifelists WHERE id=%s", (list_id,))
         res = cur.fetchone()
         return self._prepare_response(LifeList.from_tuple(res))
+
+    def get_favourite_lists(self, authorized_user_id):
+        print("Getting favourite lists for " + authorized_user_id)
+        return self._prepare_response({"items": [
+            LifeList.from_tuple((
+                1, 'Corona Preparation 1',
+                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
+            LifeList.from_tuple((
+                2, 'Corona Preparation 2',
+                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
+            LifeList.from_tuple((
+                3, 'Corona Preparation 3',
+                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
+            LifeList.from_tuple((
+                4, 'Corona Preparation 4',
+                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict()
+        ]})
