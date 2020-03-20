@@ -1,5 +1,6 @@
 from src.api.client import BaseClient
 from src.api.dto import DTO
+from src.database.db import DBClient
 
 
 class LifeList(DTO):
@@ -27,28 +28,36 @@ class LifeList(DTO):
 
 class LifeListClient(BaseClient):
 
-    def __init__(self, db_conn):
-        super(LifeListClient, self).__init__(db_conn=db_conn)
+    def __init__(self, db_client):
+        super(LifeListClient, self).__init__(db_client=db_client)
 
     def get_life_list(self, list_id):
-        cur = self.db_conn.cursor()
-        cur.execute("SELECT * FROM lifelists WHERE id=%s", (list_id,))
-        res = cur.fetchone()
-        return self._prepare_response(LifeList.from_tuple(res))
+        res = self.db_client.execute_get("SELECT * FROM lifelists WHERE id=%s", (list_id,), limit_one=True)
+        return self._build_succesful_response(LifeList.from_tuple(res))
 
     def get_favourite_lists(self, authorized_user_id):
-        print("Getting favourite lists for " + authorized_user_id)
-        return self._prepare_response({"items": [
-            LifeList.from_tuple((
-                1, 'Corona Preparation 1',
-                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
-            LifeList.from_tuple((
-                2, 'Corona Preparation 2',
-                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
-            LifeList.from_tuple((
-                3, 'Corona Preparation 3',
-                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict(),
-            LifeList.from_tuple((
-                4, 'Corona Preparation 4',
-                'List preparing for corona virus - includes shopping, and sanitization', None,)).to_dict()
-        ]})
+        res = self.db_client.execute_get(
+            "SELECT lifelists.id, lifelists.title, lifelists.description, lifelists.author_id FROM "
+            "favourites left join lifelists on favourites.lifelist_id = lifelists.id where user_id=%s",
+            (authorized_user_id,))
+        return self._build_succesful_response({
+            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+        })
+
+    def get_my_lists(self, authorized_user_id):
+        res = self.db_client.execute_get(
+            "SELECT * FROM lifelists where author_id=%s", (authorized_user_id,))
+        return self._build_succesful_response({
+            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+        })
+
+    def search_lists(self, query):
+        if not query:
+            return self._build_failed_response(400, "Please supply valid search query. Required: 'query' param")
+        query = self._wildcard_pad(query)
+        res = self.db_client.execute_get(
+            """SELECT * from lifelists where title like %s or description like %s LIMIT 30""",
+            (query, query,))
+        return self._build_succesful_response({
+            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+        })

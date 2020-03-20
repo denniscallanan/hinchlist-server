@@ -7,5 +7,7 @@ class EnvVars:
     DATABASE_URL = "JAWSDB_URL"
 
 
-class RequestHeaders:
+class RequestFields:
     ACCESS_TOKEN = "access-token"
+    QUERY = "query"
+
