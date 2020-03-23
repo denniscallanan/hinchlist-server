@@ -10,4 +10,3 @@ class EnvVars:
 class RequestFields:
     ACCESS_TOKEN = "access-token"
     QUERY = "query"
-

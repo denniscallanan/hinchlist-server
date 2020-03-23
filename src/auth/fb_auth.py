@@ -4,7 +4,6 @@ session_tokens = {}
 
 
 def get_authorized_user(access_token):
-    print(access_token)
     if access_token in session_tokens:
         print("User " + session_tokens[access_token] + " authorized through session")
         return session_tokens[access_token]

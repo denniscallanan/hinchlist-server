@@ -1,6 +1,5 @@
 from src.api.client import BaseClient
 from src.api.dto import DTO
-from src.database.db import DBClient
 
 
 class LifeList(DTO):
@@ -41,14 +40,14 @@ class LifeListClient(BaseClient):
             "favourites left join lifelists on favourites.lifelist_id = lifelists.id where user_id=%s",
             (authorized_user_id,))
         return self._build_succesful_response({
-            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+            "items": [LifeList.from_tuple(x).to_dict() for x in res]
         })
 
     def get_my_lists(self, authorized_user_id):
         res = self.db_client.execute_get(
             "SELECT * FROM lifelists where author_id=%s", (authorized_user_id,))
         return self._build_succesful_response({
-            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+            "items": [LifeList.from_tuple(x).to_dict() for x in res]
         })
 
     def search_lists(self, query):
@@ -59,5 +58,5 @@ class LifeListClient(BaseClient):
             """SELECT * from lifelists where title like %s or description like %s LIMIT 30""",
             (query, query,))
         return self._build_succesful_response({
-            "items": list(map(lambda x: LifeList.from_tuple(x).to_dict(), res))
+            "items": [LifeList.from_tuple(x).to_dict() for x in res]
         })

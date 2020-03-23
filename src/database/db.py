@@ -1,28 +1,42 @@
 import os
+
 from urllib.parse import urlparse
-import MySQLdb
+
+from mysql.connector.pooling import MySQLConnectionPool
 from src.api.constants import EnvVars
 
 
 class DBClient:
 
     def __init__(self):
+        print("PID %d: initializing pool..." % os.getpid())
         environment = os.environ.get("ENV", "test")
-        db_url = os.environ[EnvVars.DATABASE_URL]
 
-        if environment == 'prod' or environment == 'test':
+        if environment in ('prod', 'test'):
+            db_url = os.environ[EnvVars.DATABASE_URL]
             url = urlparse(db_url)
-            self.db_conn = MySQLdb.connect(host=url.hostname, port=url.port, db=url.path[1:], passwd=url.password,
-                                           user=url.username)
+
+            dbconfig = {
+                "host": url.hostname,
+                "port": url.port,
+                "user": url.username,
+                "password": url.password,
+                "database": url.path[1:],
+            }
+            self.pool = MySQLConnectionPool(pool_name="pool1", **dbconfig)
 
     def execute_get(self, query, params, limit_one=False):
-        if not self.db_conn:
-            self.__init__()
-        cur = self.db_conn.cursor()
+
+        con = self.pool.get_connection()
+        cur = con.cursor()
         cur.execute(query, params)
         if limit_one:
-            return cur.fetchone()
-        return cur.fetchall()
+            result = cur.fetchone()
+        else:
+            result = cur.fetchall()
+        con.close()
+
+        return result
 
     def execute_post(self, query):
         pass
