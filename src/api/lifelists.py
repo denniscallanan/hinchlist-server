@@ -36,8 +36,8 @@ class LifeListClient(BaseClient):
 
     def get_favourite_lists(self, authorized_user_id):
         res = self.db_client.execute_get(
-            "SELECT lifelists.id, lifelists.title, lifelists.description, lifelists.author_id FROM "
-            "favourites left join lifelists on favourites.lifelist_id = lifelists.id where user_id=%s",
+            "SELECT lifelists.lifelist_id, lifelists.title, lifelists.description, lifelists.author_id FROM "
+            "favourites left join lifelists on favourites.lifelist_id = lifelists.lifelist_id where user_id=%s",
             (authorized_user_id,))
         return self._build_succesful_response({
             "items": [LifeList.from_tuple(x).to_dict() for x in res]
@@ -60,3 +60,32 @@ class LifeListClient(BaseClient):
         return self._build_succesful_response({
             "items": [LifeList.from_tuple(x).to_dict() for x in res]
         })
+
+    def add_list(self, authorized_user_id, list_item):
+        print("adding list")
+        new_lifelist_id = "LL_" + self._generate_id()
+        posted_tasks = list_item["tasks"]
+        self.db_client.execute_amend(
+            "INSERT INTO lifelists (lifelist_id, title, description, author_id) VALUES (%s, %s, %s, %s)",
+            (new_lifelist_id, list_item["title"], list_item["description"], authorized_user_id,))
+        print("Added list item")
+        task_query_prefix = "INSERT INTO tasks (task_id, lifelist_id, title, idx) VALUES "
+        task_queries = []
+        tasks = []
+        for idx, task in enumerate(posted_tasks):
+            task_queries.append(f"(%s, '{new_lifelist_id}', %s, {idx})")
+            tasks.append("TSK_" + self._generate_id())
+            tasks.append(task)
+        full_query = task_query_prefix + ','.join(task_queries)
+        print(full_query)
+        self.db_client.execute_amend(full_query, tuple(tasks))
+        print("Added " + str(len(posted_tasks)) + " task items")
+        list_item["list_id"] = new_lifelist_id
+        list_item["tasks"] = [{"title": task, "id": idx} for idx, task in enumerate(posted_tasks)]
+        return self._build_succesful_response(list_item)
+
+    def delete_list(self, authorized_user_id, list_id):
+        self.db_client.execute_amend(
+            "DELETE FROM lifelists WHERE lifelist_id = %s AND author_id = %s",
+            (list_id, authorized_user_id))
+        return self._build_succesful_response("success")

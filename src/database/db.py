@@ -26,7 +26,6 @@ class DBClient:
             self.pool = MySQLConnectionPool(pool_name="pool1", **dbconfig)
 
     def execute_get(self, query, params, limit_one=False):
-
         con = self.pool.get_connection()
         cur = con.cursor()
         cur.execute(query, params)
@@ -35,8 +34,11 @@ class DBClient:
         else:
             result = cur.fetchall()
         con.close()
-
         return result
 
-    def execute_post(self, query):
-        pass
+    def execute_amend(self, query, params):
+        con = self.pool.get_connection()
+        cur = con.cursor()
+        cur.execute(query, params)
+        con.commit()
+        con.close()

@@ -1,3 +1,6 @@
+import random
+import string
+
 from src.database.db import DBClient
 
 
@@ -20,3 +23,6 @@ class BaseClient:
 
     def _wildcard_pad(self, query):
         return "%" + query + "%"
+
+    def _generate_id(self, length=8):
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
